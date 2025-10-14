@@ -1,0 +1,22 @@
+# Morsaicos - Aplicación de Fotomosaicos
+# Dependencias requeridas
+
+# Core image processing and computation
+numpy>=1.21.0
+Pillow>=9.0.0
+tqdm>=4.64.0
+matplotlib>=3.5.0
+
+# Para optimizaciones de rendimiento
+psutil>=5.8.0  # Detección automática de núcleos de CPU
+joblib>=1.1.0  # Paralelización avanzada
+numba>=0.61.2  # Compilación JIT para optimización
+
+# Web application dependencies (para la interfaz web)
+fastapi>=0.116.2  # Framework web moderno
+uvicorn>=0.35.0  # Servidor ASGI
+python-multipart>=0.0.20  # Manejo de uploads
+websockets>=15.0.1  # Comunicación en tiempo real
+torch
+torchvision
+requests>=2.32.0

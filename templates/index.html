@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Foto Morsaicos</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/app.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-meta">
+        <div class="header-title">
+          <h1>Generador de Fotomosaicos</h1>
+          <span>PCIC  Examen General de Conocimientos</span>
+        </div>
+        <div class="header-authors">
+          <p><strong>Autor:</strong> Aldo Eliacim Alvarez Lemus</p>
+          <p><strong>Sinodal:</strong> Dr. Manuel Cristobal Lopez Michelone</p>
+          <p><strong>Lider de linea:</strong> Fotomosaicos  UNAM/IIMAS</p>
+        </div>
+      </div>
+      <p class="header-context">Proyecto academico basado en "Un estudio empirico de los fotomosaicos", investigacion UNAM/IIMAS 2023.</p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>1. Configura tu mosaico</h2>
+        <p class="lead">
+          Selecciona una imagen o usa un preset. Todos los presets cargan la muestra <code>static/morsa.jpg</code>
+          para comparar resultados rapidamente.
+        </p>
+
+        <div class="preset-group" role="group" aria-label="Presets de configuracion">
+          <button type="button" class="preset-button" data-preset="fast">
+            Rapido
+            <span>Celda grande, menos candidatos. Ideal para pruebas.</span>
+          </button>
+          <button type="button" class="preset-button" data-preset="balanced">
+            Equilibrado
+            <span>Mejor balance entre tiempo y detalle.</span>
+          </button>
+          <button type="button" class="preset-button" data-preset="high">
+            Alta calidad
+            <span>Celda pequena, muchos candidatos, blending sutil.</span>
+          </button>
+          <button type="button" class="preset-button" data-preset="unam">
+            Estudio UNAM
+            <span>Parametros del estudio 2023; base para evaluaciones academicas.</span>
+          </button>
+        </div>
+
+        <form id="mosaic-form">
+          <div class="field">
+            <label for="source-image">
+              Imagen origen
+              <small>Se aceptan PNG o JPG hasta 25 MB</small>
+            </label>
+            <input id="source-image" name="source" type="file" accept=".jpg,.jpeg,.png" required>
+            <div id="source-preview-wrapper" class="preview" hidden>
+              <span class="preview-label">Vista previa</span>
+              <img id="source-preview" alt="Vista previa de la imagen seleccionada">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="cell-size">
+              Tamano de celda
+              <span id="cell-size-value">32px</span>
+            </label>
+            <input id="cell-size" type="range" min="16" max="96" value="32" step="4">
+            <div class="range-meta">
+              <span>Mas definicion</span>
+              <span>Menos celdas</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="top-candidates">
+              Candidatos por celda
+              <span id="top-candidates-value">35</span>
+            </label>
+            <input id="top-candidates" type="range" min="10" max="128" value="35" step="4">
+          </div>
+
+          <div class="field">
+            <label for="max-repeats">
+              Repeticiones maximas por tesela
+              <span id="max-repeats-value">Sin limite</span>
+            </label>
+            <input id="max-repeats" type="range" min="0" max="40" value="8" step="1">
+          </div>
+
+          <div class="field">
+            <label for="repetition-penalty">
+              Penalizacion por repeticion
+              <span id="penalty-value">0.35</span>
+            </label>
+            <input id="repetition-penalty" type="range" min="0" max="1.5" value="0.35" step="0.05">
+          </div>
+
+          <div class="field">
+            <label for="neighbor-radius">
+              Radio de vecindad
+              <span id="radius-value">1</span>
+            </label>
+            <input id="neighbor-radius" type="range" min="0" max="4" value="1" step="1">
+          </div>
+
+          <div class="field">
+            <label for="distance-metric">Metrica de color</label>
+            <select id="distance-metric">
+              <option value="ciede2000">CIEDE2000</option>
+              <option value="riemersma">Riemersma</option>
+              <option value="hybrid" selected>Hibrida (CIEDE + Riemersma)</option>
+            </select>
+          </div>
+
+          <div class="field blend-field">
+            <label for="blend-ratio">
+              Porcentaje de blending (para el filtro)
+              <span id="blend-value">28%</span>
+            </label>
+            <input id="blend-ratio" type="range" min="0" max="0.6" value="0.28" step="0.02">
+            <div class="range-meta">
+              <span>Identidad teselas</span>
+              <span>Mas fidelidad global</span>
+            </div>
+          </div>
+
+          <div class="toggle">
+            <input id="enable-enhancement" type="checkbox" checked>
+            <label for="enable-enhancement">Aplicar realce tonal al resultado</label>
+          </div>
+
+          <button id="submit-btn" class="primary" type="submit">Generar fotomosaico</button>
+        </form>
+
+        <div class="job-history">
+          <h2>Historial reciente</h2>
+          <div class="empty-state history-empty">
+            Aun no hay trabajos registrados en esta sesion.
+          </div>
+          <ul class="history-list"></ul>
+        </div>
+      </section>
+
+      <section class="panel results">
+        <h2>2. Progreso y resultados</h2>
+        <p class="lead">Sigue el estado del procesamiento y descarga tus mosaicos terminados.</p>
+
+        <div class="status-card">
+          <div class="status-pill" data-state="idle">SIN TRABAJO</div>
+          <div class="progress-track">
+            <div class="progress-bar"></div>
+          </div>
+        <div class="status-meta" hidden>
+          <span class="elapsed">Tiempo transcurrido: --</span>
+          <span class="eta">ETA: --</span>
+        </div>
+        <div class="status-message">Sube una imagen para comenzar.</div>
+        <div class="status-events" hidden>
+          <h4>Eventos recientes</h4>
+          <ul class="status-events-list"></ul>
+        </div>
+      </div>
+
+      <div class="preview-card">
+        <header>
+          <h3>Previsualizacion en vivo</h3>
+            <span>Sigue la composicion mientras se asignan teselas.</span>
+          </header>
+          <div class="preview-placeholder" id="live-preview-empty">
+            Inicia un trabajo para ver las actualizaciones progresivas.
+          </div>
+          <img id="live-preview-image" hidden alt="Previsualizacion del mosaico en progreso">
+        </div>
+
+        <div class="result-card">
+          <header>
+            <h3>Resultado del mosaico</h3>
+            <span id="result-type">Sin generar</span>
+          </header>
+          <div class="empty-state result-empty">
+            Genera un mosaico para ver el resultado aqui.
+          </div>
+          <img id="result-image" hidden alt="Resultado del mosaico">
+          <div class="result-filters" hidden>
+            <span class="result-filters-label">Filtros de vista</span>
+            <div class="result-filter-options" id="result-filter-options"></div>
+          </div>
+          <div class="result-actions">
+            <span>Descargar</span>
+            <a id="download-result" hidden download>mosaico.jpg</a>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <header class="metrics-header">
+            <h3>Metricas del resultado</h3>
+          </header>
+          <div class="metrics-table-wrapper">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Metrica</th>
+                  <th>Valor</th>
+                  <th>Nota</th>
+                </tr>
+              </thead>
+              <tbody class="metrics-body"></tbody>
+            </table>
+          </div>
+          <div class="metrics-chart">
+            <header>
+              <h4>Progreso celdas vs tiempo</h4>
+              <span id="chart-status">Sin datos</span>
+            </header>
+            <canvas id="progress-chart" width="600" height="220"></canvas>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Autor: Aldo Eliacim Alvarez Lemus</p>
+      <p>PCIC - Examen General de Conocimientos</p>
+      <p>Fotomosaicos</p>
+      <p>Sinodal: Dr. Manuel Cristobal Lopez Michelone</p>
+    </footer>
+    <script>
+      window.APP_CONFIG = {
+        pollInterval: {{ poll_interval | default(1.0) }}
+      };
+    </script>
+    <script src="/static/js/app.js" defer></script>
+  </body>
+</html>
+
